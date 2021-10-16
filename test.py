@@ -73,7 +73,10 @@ class Environment():
         self.steps = 0
         return self._observe()
     
-    def _step(self,action):
+
+
+    # actionをmapに反映させて反映後のmapと報酬と終了したか否かを返す。
+    def step(self,action):
         #移動action　0.右right 1.上up 2.左left 3.下down
         if action == 0:
             next_pos = self.pos + [0, 1]
@@ -163,6 +166,7 @@ class Robot():
     def __init__(self,name,start_pos):
         self.name = name
         self.start_pos = start_pos
+        self._reset()
         
     #メソッドmethods
     def _reset(self):
@@ -190,7 +194,9 @@ class Robot():
     def _is_loading(self):
         pass
 
-
+    # observationに応じてactionを返す
+    def get_action(self, observation):
+        return 1
 
 
 #アクセスポイントAP
@@ -225,28 +231,55 @@ class Goods():
 #その他の関数
 
 #動かすもの
-env=Environment()
-#print(env.MAP)
-'''
-steplist=[0,0,0,0,0,1,1,1,1]
 
-count=1
-for i in range(len(steplist)):
-    print("========================")
-    print(count)
-    count+=1
-    print(env._step(steplist[i]))
+def main():
+    env=Environment()
+    start_positions = env.get_start_positions()#スタートポジションはenvで定義しておく]　mainで作っても良い <= バラバラで想定
+    names = env.get_names() # nameのリスト mainで定義しておいても良い
+    state = env.get_state()# 初期のmap取得
+    robots = [ Robot(names[i],start_positions[i]) for i in range(len(names))] #robotの生成
+
+    while True:
+        actions = [ r.get_action(state) for r in robots ] #actionlistを作る
+        
+        for i in range(env.get_robot_num()):
+            env.set_action(i,actions) #robotのindex // ここではreward返したらだめ actionによってfieldを更新するだけ
+        for i in range(env.get_robot_num()):
+            robots.set_reward(env.get_reward(i)) #ロボットに報酬をセットする
+        
+        if env.is_end():# 終了したかどうか
+            break
+
+        state = env.get_state() #stateを更新する
 
 
 
-R1=Robot("Robot1",(1,1))
-R2=Robot("Robot2",(1,10))
-B1=AP("Base1",(0,3))
-B2=AP("Base2",(11,3))
-print(R1.name)
-'''
-print(env.goal)
-print(env.goal_list)
+# test用
+def test():
+    env=Environment()
+    steplist=[0,0,0,0,0,1,1,1,1]
+
+    count=1
+    for i in range(len(steplist)):
+        print("========================")
+        print(count)
+        count+=1
+        print(env._step(steplist[i]))
+        
+
+
+    R1=Robot("Robot1",(1,1))
+    R2=Robot("Robot2",(1,10))
+    B1=AP("Base1",(0,3))
+    B2=AP("Base2",(11,3))
+    print(R1.name)
+    print(env.goal)
+    print(env.goal_list)
+
+
+
+if __name__ == '__main__':
+    main()
 
 
 
